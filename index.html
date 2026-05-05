@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Sonoworks</title>
+
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/arc-theme.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+            <img src="img/sonoworks-logo.png"
+                 alt="Sonoworks"
+                 style="width: 180px; height: auto; padding: 8px 0;">
+        </a>
+
+        <hr class="sidebar-divider my-0">
+
+        <li class="nav-item active">
+            <a class="nav-link" href="index.html">
+                <i class="fas fa-fw fa-home"></i>
+                <span>Home</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">Fourier Analysis</div>
+
+        <li class="nav-item">
+            <a class="nav-link" href="sound-fft-analysis.html">
+                <i class="fas fa-fw fa-volume-up"></i>
+                <span>Sound Fourier Analysis</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="vibration-fft-analysis.html">
+                <i class="fas fa-fw fa-wave-square"></i>
+                <span>Vibration Fourier Analysis</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider d-none d-md-block">
+        <div class="text-center d-none d-md-inline">
+            <button class="rounded-circle border-0" id="sidebarToggle"></button>
+        </div>
+
+    </ul>
+    <!-- End Sidebar -->
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div class="ml-auto">
+                    <span class="text-gray-600 small">Sonoworks &mdash; Acoustic Analysis Platform</span>
+                </div>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="container-fluid">
+
+                <!-- Logo header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-body py-4 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <img src="img/sonoworks-logo.png"
+                                         alt="Sonoworks"
+                                         style="height: 80px; width: auto;">
+                                </div>
+                                <div class="text-right">
+                                    <h4 class="font-weight-bold text-gray-800 mb-1">Sonoworks</h4>
+                                    <p class="text-gray-500 mb-0 small">Acoustic Signal Analysis Platform</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-gray-600 mb-4">Select an analysis tool below or use the sidebar to get started.</p>
+
+                <!-- Fourier Analysis -->
+                <h5 class="font-weight-bold mb-3" style="color: #1a1a1a; border-left: 4px solid #cc0000; padding-left: 10px;">
+                    Fourier Analysis
+                </h5>
+
+                <div class="row">
+
+                    <!-- Sound Fourier Analysis Card -->
+                    <div class="col-xl-4 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Batch Processing
+                                        </div>
+                                        <div class="h5 mb-2 font-weight-bold text-gray-800">Sound Fourier Analysis</div>
+                                        <p class="text-gray-600 small mb-3">
+                                            Batch process multiple .wav files and generate Fourier analysis with configurable frequency resolution. Outputs a CSV file with dB SPL results.
+                                        </p>
+                                        <a href="sound-fft-analysis.html" class="btn btn-primary btn-sm">Open</a>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-volume-up fa-2x" style="color: #cc0000; opacity: 0.3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vibration Fourier Analysis Card -->
+                    <div class="col-xl-4 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Batch Processing
+                                        </div>
+                                        <div class="h5 mb-2 font-weight-bold text-gray-800">Vibration Fourier Analysis</div>
+                                        <p class="text-gray-600 small mb-3">
+                                            Batch process multiple .wav files and generate Fourier analysis with configurable frequency resolution. Outputs a CSV file with acceleration RMS results.
+                                        </p>
+                                        <a href="vibration-fft-analysis.html" class="btn btn-primary btn-sm">Open</a>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-wave-square fa-2x" style="color: #cc0000; opacity: 0.3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <!-- End Page Content -->
+
+        </div>
+    </div>
+    <!-- End Content Wrapper -->
+
+</div>
+<!-- End Wrapper -->
+
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="js/sb-admin-2.min.js"></script>
+
+</body>
+</html>

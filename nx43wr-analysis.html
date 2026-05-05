@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Sonoworks - NX-43WR Waveform Analysis</title>
+
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/arc-theme.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        .upload-bar {
+            border: 2px dashed #cc0000;
+            border-radius: 8px;
+            padding: 12px 20px;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .upload-bar:hover { background-color: #f5e6e6; }
+
+        .file-info-bar {
+            display: none;
+            align-items: center;
+            gap: 24px;
+            padding: 8px 4px;
+            font-size: 0.85rem;
+            color: #555555;
+            flex-wrap: wrap;
+        }
+        .file-info-bar span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #playerWrapper {
+            display: none;
+            align-items: center;
+            padding-left: 16px;
+            border-left: 2px solid #e3e6f0;
+            margin-left: 8px;
+        }
+        #audioPlayer {
+            height: 36px;
+            min-width: 280px;
+        }
+
+        /* Tab strip inside card header */
+        .analysis-tabs {
+            display: flex;
+            gap: 4px;
+        }
+        .analysis-tabs .tab-btn {
+            padding: 6px 14px;
+            background-color: transparent;
+            border: 1px solid #e3e6f0;
+            border-bottom: 2px solid transparent;
+            color: #6c757d;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.2s;
+        }
+        .analysis-tabs .tab-btn:hover {
+            color: #cc0000;
+            background-color: #f8f9fc;
+        }
+        .analysis-tabs .tab-btn.active {
+            color: #cc0000;
+            border-bottom-color: #cc0000;
+            background-color: #ffffff;
+        }
+        .analysis-tabs .tab-btn i {
+            margin-right: 6px;
+        }
+
+        /* Time cursor overlay for time-dependent plots */
+        .plot-wrapper {
+            position: relative;
+        }
+        .time-cursor {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            background-color: rgba(204, 0, 0, 0.7);
+            pointer-events: none;
+            display: none;
+            z-index: 10;
+        }
+
+        #spectrogramCanvas {
+            width: 100%;
+            display: block;
+        }
+        #spectrogramWrapper {
+            width: 100%;
+            height: 500px;
+            background-color: #1a1a1a;
+            position: relative;
+        }
+
+        /* Spectrogram playhead overlay (used by both single-tab and BS 4142) */
+        .spectrogram-playhead,
+        #spectrogramPlayhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: rgba(255, 255, 255, 0.85);
+            pointer-events: none;
+            display: none;
+            z-index: 5;
+        }
+
+        /* Loading overlay covers the chart card body during heavy calculations */
+        .chart-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(33, 33, 33, 0.7);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+            border-radius: 0 0 0.35rem 0.35rem;
+        }
+        .chart-overlay .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #cc0000;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        .chart-overlay .label {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tab controls: laid out as flex rows, but JS toggles display:none
+           per tab. Avoids Bootstrap's d-flex !important which would otherwise
+           override the inline display:none. */
+        .tab-control {
+            display: flex;
+        }
+
+        /* Compact number inputs for axis range fields */
+        .range-input {
+            width: 65px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+        }
+        .range-input::-webkit-outer-spin-button,
+        .range-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .range-input[type=number] {
+            -moz-appearance: textfield;
+        }
+        .range-sep {
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        /* Zoom selection: while active the plot wrapper shows crosshair
+           and a red rubber-band rectangle is drawn over the chart. */
+        .plot-wrapper.zoom-active,
+        .plot-wrapper.zoom-active canvas,
+        .plot-wrapper.zoom-active * {
+            cursor: crosshair !important;
+        }
+        .zoom-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: none;
+            z-index: 50;
+        }
+        .zoom-overlay.active { display: block; }
+        .zoom-rect {
+            fill: rgba(204, 0, 0, 0.15);
+            stroke: #cc0000;
+            stroke-width: 1.5;
+            stroke-dasharray: 4 3;
+        }
+        .tab-btn.zoom-btn {
+            background-color: #f5e6e6;
+        }
+        .tab-btn.zoom-btn.active {
+            background-color: #cc0000;
+            color: #ffffff;
+            border-color: #cc0000;
+        }
+
+        /* Selection mode (BS 4142 tab): blue rubber-band, blue translucent
+           regions overlaid on the time-history chart and the spectrogram. */
+        .plot-wrapper.select-active,
+        .plot-wrapper.select-active canvas,
+        .plot-wrapper.select-active * {
+            cursor: crosshair !important;
+        }
+        .bs4142-region-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;   /* allows click-to-remove on regions */
+            z-index: 4;
+        }
+        .bs4142-region {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            background-color: rgba(54, 162, 235, 0.25);
+            border-left: 1.5px solid rgba(54, 162, 235, 0.85);
+            border-right: 1.5px solid rgba(54, 162, 235, 0.85);
+            cursor: pointer;
+        }
+        .bs4142-region:hover {
+            background-color: rgba(231, 76, 60, 0.35);
+        }
+        #selectBtn.active {
+            background-color: #36a2eb;
+            color: #ffffff;
+            border-color: #36a2eb;
+        }
+
+        /* BS 4142 stacked plot layout */
+        #bs4142Container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .bs4142-plot {
+            position: relative;
+            height: 260px;          /* short enough to stack on screen */
+        }
+        .bs4142-spec-wrapper {
+            width: 100%;
+            height: 100%;
+            background-color: #1a1a1a;
+            position: relative;
+        }
+        .bs4142-spec-wrapper canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Leq summary cards at the top of BS 4142 */
+        .bs4142-leq-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .bs4142-leq-card {
+            flex: 1;
+            border-radius: 6px;
+            padding: 10px 14px;
+            border-left: 4px solid;
+            background-color: #2a2a2a;
+        }
+        .bs4142-leq-card.bs4142-selected {
+            border-left-color: #36a2eb;
+            box-shadow: inset 0 0 0 1px rgba(54, 162, 235, 0.25);
+        }
+        .bs4142-leq-card.bs4142-excluded {
+            border-left-color: #cc0000;
+            box-shadow: inset 0 0 0 1px rgba(204, 0, 0, 0.25);
+        }
+        .bs4142-leq-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #b8b8b8 !important;
+            letter-spacing: 0.4px;
+        }
+        /* Two stats per tile (Leq | L90), laid out as a flex row. */
+        .bs4142-stats {
+            display: flex;
+            gap: 28px;
+            margin: 4px 0 2px 0;
+        }
+        .bs4142-stat {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+        .bs4142-stat-key {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #9aa0a6 !important;
+            letter-spacing: 0.3px;
+        }
+        .bs4142-stat-value {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #ffffff !important;
+        }
+        .bs4142-leq-meta {
+            font-size: 0.78rem;
+            color: #9aa0a6 !important;
+        }
+
+        /* Make card-body the positioning context for the overlay */
+        #chartRow .card-body {
+            position: relative;
+        }
+    </style>
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+            <img src="img/sonoworks-logo.png"
+                 alt="Sonoworks"
+                 style="width: 180px; height: auto; padding: 8px 0;">
+        </a>
+
+        <hr class="sidebar-divider my-0">
+
+        <li class="nav-item">
+            <a class="nav-link" href="index.html">
+                <i class="fas fa-fw fa-home"></i>
+                <span>Home</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">NL-53 Sound Level Meter</div>
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="nl53-manual.html">
+                <i class="fas fa-fw fa-file"></i>
+                <span>Manual Store</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="nl53-auto.html">
+                <i class="fas fa-fw fa-database"></i>
+                <span>Auto Store</span>
+            </a>
+        </li>
+
+        <li class="nav-item active">
+            <a class="nav-link" href="nx43wr-analysis.html">
+                <i class="fas fa-fw fa-wave-square"></i>
+                <span>NX-43WR Waveform</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider d-none d-md-block">
+        <div class="text-center d-none d-md-inline">
+            <button class="rounded-circle border-0" id="sidebarToggle"></button>
+        </div>
+
+    </ul>
+    <!-- End Sidebar -->
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div class="ml-auto">
+                    <span class="text-gray-600 small">Sonoworks &mdash; NX-43WR Waveform Analysis</span>
+                </div>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="container-fluid">
+
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">NX-43WR Waveform Analysis</h1>
+                </div>
+
+                <!-- Upload Card -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow mb-4">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center" style="gap: 0;">
+
+                                    <div class="upload-bar" id="dropZone">
+                                        <i class="fas fa-file-audio fa-lg text-primary"></i>
+                                        <span class="font-weight-bold text-gray-700">Drop an NX-43WR .wav file here</span>
+                                        <span class="text-gray-500 small">or</span>
+                                        <button class="btn btn-primary btn-sm"
+                                            onclick="document.getElementById('fileInput').click()">Browse</button>
+                                        <input type="file" id="fileInput" accept=".wav" style="display:none">
+                                    </div>
+
+                                    <!-- Audio player -->
+                                    <div id="playerWrapper">
+                                        <audio id="audioPlayer" controls></audio>
+                                    </div>
+
+                                </div>
+
+                                <div class="file-info-bar mt-2" id="fileInfo">
+                                    <span><i class="fas fa-file text-primary"></i> <strong id="fileName"></strong></span>
+                                    <span><i class="fas fa-wave-square text-primary"></i> <span id="fileSampleRate"></span></span>
+                                    <span><i class="fas fa-clock text-primary"></i> <span id="fileDuration"></span></span>
+                                    <span><i class="fas fa-sliders-h text-primary"></i> <span id="fileCalibration"></span></span>
+                                    <span id="fileRangeInfo" style="display:none">
+                                        <i class="fas fa-arrows-alt-v text-primary"></i> <span id="fileRange"></span>
+                                    </span>
+                                    <span id="fileDateInfo" style="display:none">
+                                        <i class="fas fa-calendar text-primary"></i> <span id="fileDate"></span>
+                                    </span>
+                                </div>
+
+                                <!-- Error alert -->
+                                <div id="errorAlert" class="alert alert-danger mt-2 mb-0" style="display:none">
+                                    <i class="fas fa-exclamation-circle mr-2"></i>
+                                    <span id="errorMessage"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="row" id="chartRow" style="display:none">
+                    <div class="col-12">
+
+                        <!-- Print toolbar (sits above the tab strip) -->
+                        <div class="d-flex justify-content-end mb-2">
+                            <button type="button" class="btn btn-primary btn-sm" id="printPdfBtn"
+                                    title="Generate a PDF report of the currently active tab">
+                                <i class="fas fa-file-pdf"></i> Print to PDF
+                            </button>
+                        </div>
+
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
+
+                                <!-- Tab strip -->
+                                <div class="analysis-tabs">
+                                    <button class="tab-btn active" data-tab="timehistory">
+                                        <i class="fas fa-chart-line"></i>Level vs. Time
+                                    </button>
+                                    <button class="tab-btn" data-tab="octave">
+                                        <i class="fas fa-chart-bar"></i>Octave Bands
+                                    </button>
+                                    <button class="tab-btn" data-tab="fft">
+                                        <i class="fas fa-chart-area"></i>FFT Spectrum
+                                    </button>
+                                    <button class="tab-btn" data-tab="spectrogram">
+                                        <i class="fas fa-th"></i>Spectrogram
+                                    </button>
+                                    <button class="tab-btn" data-tab="bs4142">
+                                        <i class="fas fa-clipboard-check"></i>BS 4142
+                                    </button>
+                                </div>
+
+                                <!-- Per-tab controls -->
+                                <div class="d-flex align-items-center flex-wrap" style="gap: 16px;">
+
+                                    <!-- Time weighting (timehistory + bs4142) -->
+                                    <div class="align-items-center tab-control" data-for="timehistory bs4142" style="gap: 8px;">
+                                        <small class="text-gray-600 font-weight-bold">Time Weighting:</small>
+                                        <div class="btn-group btn-group-toggle btn-group-sm" data-toggle="buttons">
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="timeWeight" value="I"> I
+                                            </label>
+                                            <label class="btn btn-outline-primary active">
+                                                <input type="radio" name="timeWeight" value="F" checked> F
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="timeWeight" value="S"> S
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Frequency weighting (timehistory, octave, fft, spectrogram, bs4142) -->
+                                    <div class="align-items-center tab-control" data-for="timehistory octave fft spectrogram bs4142" style="gap: 8px;">
+                                        <small class="text-gray-600 font-weight-bold">Freq. Weighting:</small>
+                                        <div class="btn-group btn-group-toggle btn-group-sm" data-toggle="buttons">
+                                            <label class="btn btn-outline-primary active">
+                                                <input type="radio" name="freqWeight" value="Lin" checked> Z
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="freqWeight" value="A"> A
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="freqWeight" value="C"> C
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Band resolution (octave tab) -->
+                                    <div class="align-items-center tab-control" data-for="octave" style="gap: 8px;">
+                                        <small class="text-gray-600 font-weight-bold">Resolution:</small>
+                                        <div class="btn-group btn-group-toggle btn-group-sm" data-toggle="buttons">
+                                            <label class="btn btn-outline-primary active">
+                                                <input type="radio" name="bandType" value="whole" checked> 1/1
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="bandType" value="third"> 1/3
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- FFT size (fft + spectrogram + bs4142) -->
+                                    <div class="align-items-center tab-control" data-for="fft spectrogram bs4142" style="gap: 8px;">
+                                        <small class="text-gray-600 font-weight-bold">FFT Size:</small>
+                                        <input type="number" id="fftSize" class="form-control form-control-sm"
+                                               style="width: 90px;" value="4096" min="64" max="65536" step="64">
+                                    </div>
+
+                                    <!-- Window toggle (fft + spectrogram + bs4142) -->
+                                    <div class="align-items-center tab-control" data-for="fft spectrogram bs4142" style="gap: 8px;">
+                                        <small class="text-gray-600 font-weight-bold">Window:</small>
+                                        <div class="btn-group btn-group-toggle btn-group-sm" data-toggle="buttons">
+                                            <label class="btn btn-outline-primary active">
+                                                <input type="radio" name="useWindow" value="on" checked> On
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="useWindow" value="off"> Off
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- X range: time, in seconds (timehistory + spectrogram + bs4142) -->
+                                    <div class="align-items-center tab-control" data-for="timehistory spectrogram bs4142" style="gap: 6px;">
+                                        <small class="text-gray-600 font-weight-bold">X (s):</small>
+                                        <input type="number" class="form-control form-control-sm range-input" id="xMinTime" placeholder="auto" step="0.1">
+                                        <span class="range-sep">–</span>
+                                        <input type="number" class="form-control form-control-sm range-input" id="xMaxTime" placeholder="auto" step="0.1">
+                                    </div>
+
+                                    <!-- X range: frequency, in Hz (fft) -->
+                                    <div class="align-items-center tab-control" data-for="fft" style="gap: 6px;">
+                                        <small class="text-gray-600 font-weight-bold">X (Hz):</small>
+                                        <input type="number" class="form-control form-control-sm range-input" id="xMinFreq" placeholder="20" step="10">
+                                        <span class="range-sep">–</span>
+                                        <input type="number" class="form-control form-control-sm range-input" id="xMaxFreq" placeholder="20000" step="100">
+                                    </div>
+
+                                    <!-- Y range: level in dB (timehistory + octave + fft + bs4142) -->
+                                    <div class="align-items-center tab-control" data-for="timehistory octave fft bs4142" style="gap: 6px;">
+                                        <small class="text-gray-600 font-weight-bold">Y (dB):</small>
+                                        <input type="number" class="form-control form-control-sm range-input" id="yMinLevel" placeholder="auto" step="1">
+                                        <span class="range-sep">–</span>
+                                        <input type="number" class="form-control form-control-sm range-input" id="yMaxLevel" placeholder="auto" step="1">
+                                    </div>
+
+                                    <!-- Y range: frequency in Hz (spectrogram + bs4142) -->
+                                    <div class="align-items-center tab-control" data-for="spectrogram bs4142" style="gap: 6px;">
+                                        <small class="text-gray-600 font-weight-bold">Y (Hz):</small>
+                                        <input type="number" class="form-control form-control-sm range-input" id="yMinSpecFreq" placeholder="20" step="10">
+                                        <span class="range-sep">–</span>
+                                        <input type="number" class="form-control form-control-sm range-input" id="yMaxSpecFreq" placeholder="auto" step="100">
+                                    </div>
+
+                                    <!-- Colour range: dB (spectrogram + bs4142) -->
+                                    <div class="align-items-center tab-control" data-for="spectrogram bs4142" style="gap: 6px;">
+                                        <small class="text-gray-600 font-weight-bold">Colour (dB):</small>
+                                        <input type="number" class="form-control form-control-sm range-input" id="cMinDb" placeholder="auto" step="1">
+                                        <span class="range-sep">–</span>
+                                        <input type="number" class="form-control form-control-sm range-input" id="cMaxDb" placeholder="auto" step="1">
+                                    </div>
+
+                                    <!-- Zoom + Reset + Select (Select only on bs4142) -->
+                                    <div class="align-items-center tab-control" data-for="timehistory octave fft spectrogram bs4142" style="gap: 6px;">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="zoomBtn" title="Drag a rectangle on the plot to set X/Y limits">
+                                            <i class="fas fa-search-plus"></i> Zoom
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetRangeBtn" title="Clear all axis range inputs (auto)">
+                                            <i class="fas fa-undo"></i> Reset
+                                        </button>
+                                    </div>
+
+                                    <!-- Select button + clear (BS 4142 only) -->
+                                    <div class="align-items-center tab-control" data-for="bs4142" style="gap: 6px;">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="selectBtn" title="Drag on either plot to add a time region; click an existing region to remove it">
+                                            <i class="fas fa-mouse-pointer"></i> Select
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSelectionBtn" title="Remove all selected regions">
+                                            <i class="fas fa-times"></i> Clear Regions
+                                        </button>
+                                    </div>
+
+                                    <!-- Analysis buttons (BS 4142 only) -->
+                                    <div class="align-items-center tab-control" data-for="bs4142" style="gap: 6px;">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="impulseBtn"
+                                                title="Calculate impulse prominence (NT ACOU 112 / BS 4142 Annex E)">
+                                            <i class="fas fa-bolt"></i> Impulse Prominence
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="toneBtn"
+                                                title="Calculate tonal audibility (Joint Nordic Method v2 / BS 4142 Annex D)">
+                                            <i class="fas fa-music"></i> Tone Audibility
+                                        </button>
+                                    </div>
+
+                                    <span id="chartSubtitle" class="text-gray-500 small"></span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Single-chart tabs use this wrapper -->
+                                <div class="plot-wrapper" id="plotWrapperMain">
+                                    <canvas id="timehistoryChart" class="tab-chart" data-tab="timehistory"></canvas>
+                                    <canvas id="octaveChart" class="tab-chart" data-tab="octave" style="display:none"></canvas>
+                                    <canvas id="fftChart" class="tab-chart" data-tab="fft" style="display:none"></canvas>
+                                    <div id="spectrogramWrapper" class="tab-chart" data-tab="spectrogram" style="display:none">
+                                        <canvas id="spectrogramCanvas"></canvas>
+                                        <div id="spectrogramPlayhead"></div>
+                                    </div>
+
+                                    <!-- Rubber-band overlay (Zoom mode) for the single-chart tabs -->
+                                    <svg class="zoom-overlay" id="zoomOverlayMain">
+                                        <rect class="zoom-rect" x="0" y="0" width="0" height="0"></rect>
+                                    </svg>
+                                </div>
+
+                                <!-- BS 4142: two stacked shorter plots + Leq summary -->
+                                <div id="bs4142Container" class="tab-chart" data-tab="bs4142" style="display:none;">
+
+                                    <!-- Period summary at top: Leq + L90 for selected and residual -->
+                                    <div class="bs4142-leq-row">
+                                        <div class="bs4142-leq-card bs4142-selected">
+                                            <div class="bs4142-leq-label">Selected Period</div>
+                                            <div class="bs4142-stats">
+                                                <div class="bs4142-stat">
+                                                    <div class="bs4142-stat-key">L<sub>eq</sub></div>
+                                                    <div class="bs4142-stat-value" id="bs4142LeqSelected">—</div>
+                                                </div>
+                                                <div class="bs4142-stat">
+                                                    <div class="bs4142-stat-key">L<sub>90</sub></div>
+                                                    <div class="bs4142-stat-value" id="bs4142L90Selected">—</div>
+                                                </div>
+                                            </div>
+                                            <div class="bs4142-leq-meta" id="bs4142LeqSelectedMeta">no selection</div>
+                                        </div>
+                                        <div class="bs4142-leq-card bs4142-excluded">
+                                            <div class="bs4142-leq-label">Residual Period</div>
+                                            <div class="bs4142-stats">
+                                                <div class="bs4142-stat">
+                                                    <div class="bs4142-stat-key">L<sub>eq</sub></div>
+                                                    <div class="bs4142-stat-value" id="bs4142LeqExcluded">—</div>
+                                                </div>
+                                                <div class="bs4142-stat">
+                                                    <div class="bs4142-stat-key">L<sub>90</sub></div>
+                                                    <div class="bs4142-stat-value" id="bs4142L90Excluded">—</div>
+                                                </div>
+                                            </div>
+                                            <div class="bs4142-leq-meta" id="bs4142LeqExcludedMeta">whole signal</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Top: time history plot -->
+                                    <div class="plot-wrapper bs4142-plot" id="plotWrapperBs4142Time">
+                                        <canvas id="bs4142TimeChart"></canvas>
+                                        <div class="bs4142-region-overlay" id="bs4142TimeRegions"></div>
+                                        <svg class="zoom-overlay" id="zoomOverlayBs4142Time">
+                                            <rect class="zoom-rect" x="0" y="0" width="0" height="0"></rect>
+                                        </svg>
+                                    </div>
+
+                                    <!-- Bottom: spectrogram -->
+                                    <div class="plot-wrapper bs4142-plot" id="plotWrapperBs4142Spec">
+                                        <div id="bs4142SpectrogramWrapper" class="bs4142-spec-wrapper">
+                                            <canvas id="bs4142SpectrogramCanvas"></canvas>
+                                            <div class="bs4142-region-overlay" id="bs4142SpecRegions"></div>
+                                            <div class="spectrogram-playhead" id="bs4142SpectrogramPlayhead"></div>
+                                        </div>
+                                        <svg class="zoom-overlay" id="zoomOverlayBs4142Spec">
+                                            <rect class="zoom-rect" x="0" y="0" width="0" height="0"></rect>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Loading overlay shown during heavy calculations -->
+                                <div class="chart-overlay" id="chartOverlay">
+                                    <div class="spinner"></div>
+                                    <div class="label" id="overlayLabel">Computing...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="js/sb-admin-2.min.js"></script>
+<script src="js/freqWeight.js"></script>
+<script src="js/timeWeight.js"></script>
+<script src="js/octFilt.js"></script>
+<script src="js/fftSPL.js"></script>
+<script src="js/sonogramSPL.js"></script>
+<script src="js/nx43wr-reader.js"></script>
+<script src="js/nx43wr-analysis.js"></script>
+<script src="js/bs4142-acoustic.js"></script>
+<script src="js/nx43wr-print.js"></script>
+
+</body>
+</html>

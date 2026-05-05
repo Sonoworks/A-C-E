@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Sonoworks - NL-53 Auto Store</title>
+
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/arc-theme.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .upload-bar {
+            border: 2px dashed #cc0000;
+            border-radius: 8px;
+            padding: 12px 20px;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .upload-bar:hover { background-color: #f5e6e6; }
+        .file-info-bar {
+            display: none;
+            align-items: center;
+            gap: 24px;
+            padding: 8px 4px;
+            font-size: 0.85rem;
+            color: #555555;
+        }
+        .file-info-bar span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #folderInfo {
+            display: none;
+            padding: 12px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            margin-top: 12px;
+        }
+        .data-summary {
+            display: none;
+            padding: 12px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            margin-top: 12px;
+            border-left: 4px solid #cc0000;
+        }
+        .error-alert {
+            display: none;
+            padding: 12px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            margin-top: 12px;
+            border-left: 4px solid #cc0000;
+            color: #c62828;
+        }
+    </style>
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+            <img src="img/sonoworks-logo.png"
+                 alt="Sonoworks"
+                 style="width: 180px; height: auto; padding: 8px 0;">
+        </a>
+
+        <hr class="sidebar-divider my-0">
+
+        <li class="nav-item">
+            <a class="nav-link" href="index.html">
+                <i class="fas fa-fw fa-home"></i>
+                <span>Home</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">NL-53 Sound Level Meter</div>
+
+        <li class="nav-item">
+            <a class="nav-link" href="nl53-manual.html">
+                <i class="fas fa-fw fa-file"></i>
+                <span>Manual Store</span>
+            </a>
+        </li>
+
+        <li class="nav-item active">
+            <a class="nav-link" href="nl53-auto.html">
+                <i class="fas fa-fw fa-database"></i>
+                <span>Auto Store</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="nx43wr-analysis.html">
+                <i class="fas fa-fw fa-wave-square"></i>
+                <span>NX-43WR Waveform</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider d-none d-md-block">
+        <div class="text-center d-none d-md-inline">
+            <button class="rounded-circle border-0" id="sidebarToggle"></button>
+        </div>
+
+    </ul>
+    <!-- End Sidebar -->
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div class="ml-auto">
+                    <span class="text-gray-600 small">Sonoworks &mdash; NL-53 Auto Store Analysis</span>
+                </div>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="container-fluid">
+
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">NL-53 Auto Store Analysis</h1>
+                </div>
+
+                <!-- Upload Card -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow mb-4">
+                            <div class="card-body py-3">
+
+                                <div class="upload-bar" id="dropZone">
+                                    <i class="fas fa-folder fa-lg text-primary"></i>
+                                    <span class="font-weight-bold text-gray-700">Drop an Auto_XXXX folder here</span>
+                                    <span class="text-gray-500 small">or</span>
+                                    <button class="btn btn-primary btn-sm"
+                                        onclick="document.getElementById('folderInput').click()">Browse</button>
+                                    <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
+                                </div>
+
+                                <div class="error-alert" id="errorAlert">
+                                    <i class="fas fa-exclamation-circle mr-2"></i>
+                                    <span id="errorMessage"></span>
+                                </div>
+
+                                <div class="data-summary" id="dataSummary">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <strong>Data Type:</strong> <span id="dataType">---</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Files Found:</strong> <span id="filesCount">0</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Measurements:</strong> <span id="measurementCount">0</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Status:</strong> <span id="loadStatus">Loading...</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="file-info-bar mt-2" id="fileInfo">
+                                    <span><i class="fas fa-folder text-primary"></i> <strong id="folderName"></strong></span>
+                                    <span id="folderDetails"></span>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="row" id="chartRow" style="display:none">
+                    <div class="col-12">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
+                                <h6 class="m-0 font-weight-bold text-primary">Auto Store Data</h6>
+                                <div id="chartControls" style="display:none; gap: 16px; display: flex; flex-wrap: wrap;">
+                                    <span id="chartSubtitle" class="text-gray-500 small"></span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="dataChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="row" id="tableRow" style="display:none">
+                    <div class="col-12">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Measurement Data</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm" id="dataTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Time</th>
+                                                <th>Leq (dB)</th>
+                                                <th>Lmax (dB)</th>
+                                                <th>Lmin (dB)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="js/sb-admin-2.min.js"></script>
+<script src="js/nl53-loader.js"></script>
+<script src="js/nl53-auto-plotter.js"></script>
+
+</body>
+</html>

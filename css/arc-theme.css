@@ -1,0 +1,437 @@
+/* arc-theme.css
+   ARC Branding — Dark Theme
+   Salford Acoustics Research Centre
+   Red: #cc0000  Black: #1a1a1a  White: #ffffff */
+
+/* =============================================
+   COLOUR VARIABLES
+   ============================================= */
+
+:root {
+    --arc-red:          #cc0000;
+    --arc-red-hover:    #ff0000;
+    --arc-black:        #1a1a1a;
+    --arc-darkgrey:     #2d2d2d;
+    --arc-midgrey:      #555555;
+    --arc-lightgrey:    #888888;
+    --arc-subtlegrey:   #3a3a3a;
+    --arc-white:        #ffffff;
+    --arc-offwhite:     #e0e0e0;
+}
+
+/* =============================================
+   BASE / BODY
+   ============================================= */
+
+body {
+    background-color: var(--arc-black) !important;
+    color: var(--arc-offwhite) !important;
+}
+
+/* =============================================
+   SIDEBAR
+   ============================================= */
+
+.sidebar {
+    background-color: var(--arc-black) !important;
+    background-image: none !important;
+}
+
+.sidebar-brand {
+    background-color: var(--arc-black) !important;
+    padding: 12px 8px !important;
+}
+
+.sidebar-brand img {
+    width: 100%;
+    max-width: 180px;
+    height: auto;
+}
+
+.sidebar .nav-item .nav-link {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.sidebar .nav-item .nav-link:hover {
+    color: var(--arc-white) !important;
+}
+
+.sidebar .nav-item.active .nav-link {
+    color: var(--arc-white) !important;
+    font-weight: 600;
+}
+
+.sidebar .nav-item .nav-link i {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.sidebar .nav-item.active .nav-link i,
+.sidebar .nav-item .nav-link:hover i {
+    color: var(--arc-red) !important;
+}
+
+.sidebar-heading {
+    color: rgba(255, 255, 255, 0.4) !important;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+}
+
+.sidebar hr.sidebar-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar .collapse-inner {
+    background-color: var(--arc-darkgrey) !important;
+    border-radius: 4px;
+}
+
+.sidebar .collapse-item {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.85rem;
+}
+
+.sidebar .collapse-item:hover {
+    background-color: var(--arc-red) !important;
+    color: var(--arc-white) !important;
+}
+
+.sidebar .collapse-item.active {
+    background-color: var(--arc-red) !important;
+    color: var(--arc-white) !important;
+    font-weight: 600;
+}
+
+#sidebarToggle {
+    background-color: var(--arc-red) !important;
+}
+
+#sidebarToggle:hover {
+    background-color: var(--arc-red-hover) !important;
+}
+
+/* =============================================
+   TOPBAR
+   ============================================= */
+
+.topbar {
+    background-color: var(--arc-darkgrey) !important;
+    border-bottom: 2px solid var(--arc-red) !important;
+}
+
+.topbar .text-gray-600 {
+    color: var(--arc-offwhite) !important;
+    font-weight: 600;
+}
+
+/* =============================================
+   CONTENT AREA
+   ============================================= */
+
+#content-wrapper {
+    background-color: var(--arc-black) !important;
+}
+
+#content {
+    background-color: var(--arc-black) !important;
+}
+
+.container-fluid {
+    background-color: var(--arc-black) !important;
+}
+
+/* =============================================
+   CARDS
+   ============================================= */
+
+.card {
+    background-color: var(--arc-darkgrey) !important;
+    border: none;
+    border-radius: 4px;
+}
+
+.card-body {
+    background-color: var(--arc-darkgrey) !important;
+    color: var(--arc-offwhite) !important;
+}
+
+.card-header {
+    background-color: var(--arc-darkgrey) !important;
+    border-bottom: 2px solid var(--arc-red) !important;
+    color: var(--arc-offwhite) !important;
+}
+
+.card-header h6 {
+    color: var(--arc-offwhite) !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+
+/* Card left border accents */
+.border-left-primary,
+.border-left-success,
+.border-left-info,
+.border-left-danger,
+.border-left-warning {
+    border-left: 4px solid var(--arc-red) !important;
+}
+
+/* =============================================
+   TYPOGRAPHY
+   ============================================= */
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--arc-offwhite) !important;
+}
+
+p {
+    color: var(--arc-offwhite) !important;
+}
+
+.text-gray-800 {
+    color: var(--arc-offwhite) !important;
+}
+
+.text-gray-700 {
+    color: var(--arc-offwhite) !important;
+}
+
+.text-gray-600 {
+    color: var(--arc-lightgrey) !important;
+}
+
+.text-gray-500 {
+    color: var(--arc-lightgrey) !important;
+}
+
+.text-primary {
+    color: var(--arc-red) !important;
+}
+
+.text-danger {
+    color: var(--arc-red) !important;
+}
+
+.text-success {
+    color: var(--arc-offwhite) !important;
+}
+
+.text-xs {
+    color: var(--arc-red) !important;
+}
+
+small {
+    color: var(--arc-lightgrey) !important;
+}
+
+/* =============================================
+   BUTTONS
+   ============================================= */
+
+.btn-primary {
+    background-color: var(--arc-red) !important;
+    border-color: var(--arc-red) !important;
+    color: var(--arc-white) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--arc-red-hover) !important;
+    border-color: var(--arc-red-hover) !important;
+}
+
+.btn-success {
+    background-color: var(--arc-darkgrey) !important;
+    border-color: var(--arc-midgrey) !important;
+    color: var(--arc-white) !important;
+}
+
+.btn-info {
+    background-color: var(--arc-red) !important;
+    border-color: var(--arc-red) !important;
+    color: var(--arc-white) !important;
+}
+
+.btn-warning {
+    background-color: var(--arc-midgrey) !important;
+    border-color: var(--arc-midgrey) !important;
+    color: var(--arc-white) !important;
+}
+
+/* =============================================
+   TOGGLE BUTTON GROUPS
+   ============================================= */
+
+.btn-group-toggle .btn-outline-primary,
+.btn-group-toggle .btn-outline-danger {
+    background-color: transparent !important;
+    color: var(--arc-red) !important;
+    border-color: var(--arc-red) !important;
+}
+
+.btn-group-toggle .btn-outline-primary.active,
+.btn-group-toggle .btn-outline-danger.active,
+.btn-group-toggle .btn-outline-primary:active,
+.btn-group-toggle .btn-outline-danger:active {
+    background-color: var(--arc-red) !important;
+    color: var(--arc-white) !important;
+    border-color: var(--arc-red) !important;
+}
+
+.btn-group-toggle .btn-outline-primary:hover,
+.btn-group-toggle .btn-outline-danger:hover {
+    background-color: var(--arc-subtlegrey) !important;
+    color: var(--arc-red) !important;
+}
+
+/* =============================================
+   UPLOAD BAR
+   ============================================= */
+
+.upload-bar {
+    border-color: var(--arc-red) !important;
+    background-color: var(--arc-subtlegrey) !important;
+}
+
+.upload-bar:hover {
+    background-color: var(--arc-midgrey) !important;
+}
+
+.upload-bar .text-gray-700,
+.upload-bar .font-weight-bold {
+    color: var(--arc-offwhite) !important;
+}
+
+/* =============================================
+   FILE INFO BAR
+   ============================================= */
+
+.file-info-bar {
+    color: var(--arc-lightgrey) !important;
+}
+
+.file-info-bar span {
+    color: var(--arc-lightgrey) !important;
+}
+
+/* =============================================
+   FORMS
+   ============================================= */
+
+.form-control {
+    background-color: var(--arc-subtlegrey) !important;
+    border-color: var(--arc-midgrey) !important;
+    color: var(--arc-offwhite) !important;
+}
+
+.form-control:focus {
+    background-color: var(--arc-subtlegrey) !important;
+    border-color: var(--arc-red) !important;
+    color: var(--arc-offwhite) !important;
+    box-shadow: 0 0 0 0.2rem rgba(204, 0, 0, 0.25) !important;
+}
+
+.col-form-label {
+    color: var(--arc-offwhite) !important;
+}
+
+/* =============================================
+   MODAL
+   ============================================= */
+
+.modal-content {
+    background-color: var(--arc-darkgrey) !important;
+    border: 1px solid var(--arc-midgrey) !important;
+}
+
+.modal-header {
+    background-color: var(--arc-black) !important;
+    border-bottom: 2px solid var(--arc-red) !important;
+}
+
+.modal-title {
+    color: var(--arc-white) !important;
+}
+
+.modal-body {
+    background-color: var(--arc-darkgrey) !important;
+    color: var(--arc-offwhite) !important;
+}
+
+.modal-footer {
+    background-color: var(--arc-darkgrey) !important;
+    border-top: 1px solid var(--arc-subtlegrey) !important;
+}
+
+/* =============================================
+   BADGES
+   ============================================= */
+
+.badge-success {
+    background-color: var(--arc-midgrey) !important;
+    color: var(--arc-white) !important;
+}
+
+.badge-warning {
+    background-color: var(--arc-red) !important;
+    color: var(--arc-white) !important;
+}
+
+/* =============================================
+   AUDIO PLAYER
+   ============================================= */
+
+#playerWrapper {
+    border-left-color: var(--arc-midgrey) !important;
+}
+
+/* =============================================
+   HR DIVIDERS
+   ============================================= */
+
+hr {
+    border-color: var(--arc-subtlegrey) !important;
+}
+
+/* =============================================
+   SECTION HEADINGS (dashboard)
+   ============================================= */
+
+.arc-section-heading {
+    color: var(--arc-offwhite) !important;
+    border-left: 4px solid var(--arc-red);
+    padding-left: 10px;
+}
+
+/* =============================================
+   CHART DEFAULTS
+   Only apply background to Chart.js canvases, not spectrogram
+   ============================================= */
+
+canvas.chartjs-render-monitor,
+#octaveChart,
+#spectrumChart,
+#timeChart {
+    background-color: var(--arc-darkgrey) !important;
+}
+
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--arc-darkgrey);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--arc-red);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--arc-red-hover);
+}

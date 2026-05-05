@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Sonoworks - Sound Fourier Analysis</title>
+
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/arc-theme.css" rel="stylesheet">
+
+    <style>
+        .upload-bar {
+            border: 2px dashed #cc0000;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-align: center;
+        }
+        .upload-bar:hover { background-color: #f5e6e6; }
+        .upload-bar.drag-over { background-color: #ffe6e6; }
+        
+        .config-panel {
+            background: #343a40;
+            border: 1px solid #495057;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 16px;
+            display: none;
+            color: #ffffff;
+        }
+        
+        .config-panel h6 {
+            color: #ffffff !important;
+            font-weight: 700;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+        
+        .config-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 0;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+            font-size: 0.9rem;
+            color: #ffffff !important;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #495057;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            color: #212529;
+            background-color: #f8f9fa;
+        }
+        
+        .form-group input:focus {
+            border-color: #cc0000;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(204, 0, 0, 0.15);
+        }
+        
+        .info-box {
+            background: #495057;
+            border-left: 4px solid #cc0000;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            display: none;
+            color: #ffffff;
+        }
+        
+        .info-box.show {
+            display: block;
+        }
+        
+        .info-box strong {
+            color: #ff6b6b;
+        }
+        
+        .progress-container {
+            display: none;
+            margin-top: 16px;
+        }
+        
+        .progress {
+            margin-bottom: 8px;
+        }
+        
+        .progress-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        .summary-box {
+            background: #495057;
+            border-left: 4px solid #cc0000;
+            padding: 16px;
+            border-radius: 4px;
+            margin-top: 16px;
+            display: none;
+            color: #ffffff;
+        }
+        
+        .summary-box.show {
+            display: block;
+        }
+        
+        .summary-box h6 {
+            color: #ffffff;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        
+        .summary-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #6c757d;
+            font-size: 0.95rem;
+            color: #ffffff;
+        }
+        
+        .summary-stat strong {
+            color: #ffffff;
+        }
+        
+        .summary-stat:last-child {
+            border-bottom: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        
+        .button-group button {
+            flex: 1;
+            min-width: 140px;
+        }
+        
+        .error-alert {
+            background: #ffebee;
+            border-left: 4px solid #cc0000;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 12px;
+            display: none;
+        }
+        
+        .error-alert.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+            <img src="img/sonoworks-logo.png"
+                 alt="Sonoworks"
+                 style="width: 180px; height: auto; padding: 8px 0;">
+        </a>
+
+        <hr class="sidebar-divider my-0">
+
+        <li class="nav-item">
+            <a class="nav-link" href="index.html">
+                <i class="fas fa-fw fa-home"></i>
+                <span>Home</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">Fourier Analysis</div>
+
+        <li class="nav-item active">
+            <a class="nav-link" href="sound-fft-analysis.html">
+                <i class="fas fa-fw fa-volume-up"></i>
+                <span>Sound Fourier Analysis</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="vibration-fft-analysis.html">
+                <i class="fas fa-fw fa-wave-square"></i>
+                <span>Vibration Fourier Analysis</span>
+            </a>
+        </li>
+
+        <hr class="sidebar-divider d-none d-md-block">
+        <div class="text-center d-none d-md-inline">
+            <button class="rounded-circle border-0" id="sidebarToggle"></button>
+        </div>
+
+    </ul>
+    <!-- End Sidebar -->
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div class="ml-auto">
+                    <span class="text-gray-600 small">Sonoworks &mdash; Sound Fourier Analysis</span>
+                </div>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="container-fluid">
+
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">Sound Fourier Analysis</h1>
+                </div>
+
+                <!-- Upload Card -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow mb-4">
+                            <div class="card-body py-3">
+
+                                <!-- File Drop Zone -->
+                                <div class="upload-bar" id="dropZone">
+                                    <i class="fas fa-folder fa-lg text-primary"></i>
+                                    <span class="font-weight-bold text-gray-700">Drop a folder with .wav files here</span>
+                                    <span class="text-gray-500 small">or</span>
+                                    <button class="btn btn-primary btn-sm" type="button"
+                                        onclick="document.getElementById('folderInput').click()">
+                                        <i class="fas fa-folder-open"></i> Browse Folder
+                                    </button>
+                                    <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
+                                </div>
+
+                                <!-- Error Alert -->
+                                <div class="error-alert" id="errorAlert">
+                                    <i class="fas fa-exclamation-circle mr-2"></i>
+                                    <span id="errorMessage"></span>
+                                </div>
+
+                                <!-- Configuration Panel -->
+                                <div class="config-panel" id="configPanel">
+                                    <h6 class="font-weight-bold text-gray-700 mb-3">Analysis Configuration</h6>
+                                    
+                                    <div class="config-row">
+                                        <div class="form-group">
+                                            <label for="calibrationFactor">Calibration Factor</label>
+                                            <input type="number" id="calibrationFactor" value="252.4626" 
+                                                   step="0.0001" placeholder="e.g., 252.4626">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="freqResolution">Frequency Resolution (Hz)</label>
+                                            <input type="number" id="freqResolution" value="0.25" 
+                                                   step="0.01" placeholder="e.g., 0.25">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-box" id="freqInfo">
+                                        <strong>Window:</strong> <span id="windowSizeDisplay">24000</span> samples
+                                        (<span id="windowTimeDisplay">0.50</span> s) &nbsp;|&nbsp;
+                                        <strong>Exact bin width:</strong> <span id="actualDfDisplay">2.000</span> Hz
+                                    </div>
+                                </div>
+
+                                <!-- Progress Container -->
+                                <div class="progress-container" id="progressContainer">
+                                    <h6 class="font-weight-bold text-gray-700 mb-2">Processing...</h6>
+                                    <div class="progress" style="height: 24px;">
+                                        <div class="progress-bar bg-danger" id="progressBar" role="progressbar" 
+                                             style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                            <span id="progressPercent">0%</span>
+                                        </div>
+                                    </div>
+                                    <div class="progress-text">
+                                        Processing file <span id="currentFile">0</span> of <span id="totalFiles">0</span>
+                                    </div>
+                                </div>
+
+                                <!-- Summary Box -->
+                                <div class="summary-box" id="summaryBox">
+                                    <h6><i class="fas fa-check-circle"></i> Analysis Complete!</h6>
+                                    <div class="summary-stat">
+                                        <span><strong>Files Processed:</strong></span>
+                                        <span id="filesProcessedSummary">0</span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span><strong>Calibration Factor:</strong></span>
+                                        <span id="calibrationSummary">0</span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span><strong>Sample Rate:</strong></span>
+                                        <span id="sampleRateSummary">48 kHz</span>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <span><strong>CSV Files Generated:</strong></span>
+                                        <span id="csvCountSummary">4</span>
+                                    </div>
+                                </div>
+
+                                <!-- Button Group -->
+                                <div class="button-group" id="actionButtons">
+                                    <button class="btn btn-primary" id="processBtn" style="display:none;"
+                                        onclick="startProcessing()">
+                                        <i class="fas fa-cog"></i> Start Processing
+                                    </button>
+                                    <button class="btn btn-success" id="downloadBtn" style="display:none;"
+                                        onclick="downloadResults()">
+                                        <span id="downloadIcon"><i class="fas fa-download"></i></span>
+                                        <span id="downloadSpinner" class="spinner-border spinner-border-sm" role="status" style="display:none;"></span>
+                                        <span id="downloadLabel"> Download Results</span>
+                                    </button>
+                                    <button class="btn btn-secondary" id="resetBtn" style="display:none;"
+                                        onclick="resetAnalysis()">
+                                        <i class="fas fa-redo"></i> Analyze Different Files
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="js/sb-admin-2.min.js"></script>
+<script src="js/fft-batch-analysis.js"></script>
+
+<script>
+let analyzer = null;
+let selectedFiles = [];
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    setupDragDrop();
+    setupEventListeners();
+});
+
+function setupDragDrop() {
+    const dropZone = document.getElementById('dropZone');
+    console.log('✓ Drag-drop setup initialized');
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('drag-over');
+        console.log('DRAGOVER event triggered');
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+        console.log('DRAGLEAVE event triggered');
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        console.log('=== DROP EVENT ===');
+        console.log('DROP event triggered');
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('drag-over');
+        
+        console.log('e.dataTransfer:', e.dataTransfer);
+        console.log('e.dataTransfer.items:', e.dataTransfer.items);
+        console.log('e.dataTransfer.items?.length:', e.dataTransfer.items?.length);
+        console.log('e.dataTransfer.files:', e.dataTransfer.files);
+        console.log('e.dataTransfer.files?.length:', e.dataTransfer.files?.length);
+        
+        const filesToProcess = e.dataTransfer.items || e.dataTransfer.files;
+        console.log('filesToProcess:', filesToProcess);
+        console.log('filesToProcess.length:', filesToProcess?.length);
+        
+        handleFolderSelect(filesToProcess);
+    });
+}
+
+function setupEventListeners() {
+    document.getElementById('folderInput').addEventListener('change', function(e) {
+        handleFolderSelect(e.target.files);
+    });
+    
+    document.getElementById('calibrationFactor').addEventListener('change', updateCalibration);
+    document.getElementById('freqResolution').addEventListener('change', updateFreqResolution);
+}
+
+function handleFolderSelect(items) {
+    console.log('>>> handleFolderSelect called');
+    console.log('items parameter:', items);
+    console.log('items type:', items?.constructor?.name);
+    console.log('items.length:', items?.length);
+    
+    clearError();
+    selectedFiles = [];
+    let allFiles = [];
+    
+    // Handle both drag-drop and file input
+    let fileArray = [];
+    
+    if (!items) {
+        console.error('❌ ERROR: items is null/undefined!');
+        showError('Error: No items received. Check browser console for details.');
+        return;
+    }
+    
+    if (!items.length) {
+        console.error('❌ ERROR: items has no length property!');
+        console.error('items:', items);
+        showError(`Error: Invalid items object. Type: ${typeof items}, Constructor: ${items?.constructor?.name}`);
+        return;
+    }
+    
+    console.log(`Processing ${items.length} items...`);
+    
+    // Recursive function to extract files from folders
+    async function traverseFileTree(item, path = "") {
+        return new Promise((resolve) => {
+            if (item.kind === "file") {
+                const file = item.getAsFile();
+                console.log(`  Found file: ${path}${file.name}`);
+                resolve([file]);
+            } else if (item.kind === "directory") {
+                const dirReader = item.createReader();
+                console.log(`  Found directory: ${path}${item.name}/`);
+                dirReader.readEntries(async (entries) => {
+                    let allFiles = [];
+                    for (let entry of entries) {
+                        const files = await traverseFileTree(entry, path + item.name + "/");
+                        allFiles = allFiles.concat(files);
+                    }
+                    resolve(allFiles);
+                });
+            }
+        });
+    }
+    
+    // Process all items (folders and files)
+    (async () => {
+        console.log('Starting folder processing...');
+        
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            console.log(`\nItem ${i}:`, item);
+            
+            // For FileList (from file input), items are File objects directly
+            // For DataTransferItemList (from drag-drop), items have .kind property
+            let file = null;
+            
+            if (item.kind !== undefined) {
+                // This is a DataTransferItem (drag-drop)
+                console.log(`  kind: ${item.kind}`);
+                console.log(`  name: ${item.name}`);
+                
+                if (item.kind === 'file') {
+                    file = item.getAsFile();
+                }
+            } else {
+                // This is a File object (file input button)
+                console.log(`  This is a File object (from file input)`);
+                file = item;
+            }
+            
+            if (file) {
+                console.log(`  File object:`, file);
+                console.log(`  File.name: ${file.name}`);
+                console.log(`  File.type: ${file.type}`);
+                console.log(`  File.size: ${file.size}`);
+                console.log(`  webkitRelativePath: ${file.webkitRelativePath}`);
+                
+                // Check if this is a directory
+                // Indicators: empty type, webkitRelativePath property exists, size is directory block (4096 or 16384)
+                const isDirectory = (file.type === '' && 
+                                   (file.webkitRelativePath !== undefined || 
+                                    file.size === 4096 || 
+                                    file.size === 16384));
+                
+                if (isDirectory) {
+                    console.log(`  ✓ Detected as DIRECTORY`);
+                    try {
+                        if (typeof item.createReader === 'function') {
+                            const dirReader = item.createReader();
+                            const files = await traverseFileTree(item);
+                            fileArray = fileArray.concat(files);
+                            console.log(`  ✓ Extracted ${files.length} files from directory`);
+                        } else {
+                            // Firefox: folder passed as File with webkitRelativePath
+                            console.log(`  ⚠ Directory detected but cannot read contents (Firefox limitation)`);
+                            console.log(`  Note: Try using the "Browse Folder" button instead of drag-drop`);
+                        }
+                    } catch (e) {
+                        console.error(`  ✗ Error reading directory:`, e);
+                    }
+                } else {
+                    console.log(`  ✓ Detected as FILE`);
+                    fileArray.push(file);
+                    console.log(`  ✓ File added: ${file.name}`);
+                }
+            }
+        }
+        
+        console.log('\n=== FILE SELECTION DEBUG ===');
+        console.log('Total items received:', items.length);
+        console.log('Total files extracted:', fileArray.length);
+        
+        // Filter for .wav files
+        for (let file of fileArray) {
+            const fullName = file.name || '';
+            const fileType = file.type || '';
+            allFiles.push(fullName);
+            
+            console.log(`File: "${fullName}" | Type: "${fileType}" | Size: ${file.size}`);
+            
+            // Accept if .wav extension or audio MIME type
+            if (fullName.toLowerCase().endsWith('.wav') || fileType.toLowerCase().includes('audio/wav')) {
+                selectedFiles.push(file);
+                console.log(`✓ ACCEPTED: ${fullName}`);
+            } else {
+                console.log(`✗ REJECTED: ${fullName}`);
+            }
+        }
+        
+        console.log('\n=== SUMMARY ===');
+        console.log('Total items processed: ' + items.length);
+        console.log('Total files extracted: ' + fileArray.length);
+        console.log('WAV files found: ' + selectedFiles.length);
+        console.log('Filenames:', allFiles);
+        
+        if (selectedFiles.length === 0) {
+            const fileNames = allFiles.slice(0, 5).join(', ');
+            const errorMsg = `No .wav files found. Received ${allFiles.length} files: ${fileNames}${allFiles.length > 5 ? '...' : ''}`;
+            showError(errorMsg);
+            return;
+        }
+        
+        // Initialize analyzer
+        const calibFactor = parseFloat(document.getElementById('calibrationFactor').value) || 252.4626;
+        analyzer = new FFTBatchAnalyzer('sound', calibFactor);
+        
+        // Show configuration panel
+        document.getElementById('configPanel').style.display = 'block';
+        document.getElementById('freqInfo').classList.add('show');
+        
+        // Update UI
+        document.getElementById('processBtn').style.display = 'inline-block';
+        document.getElementById('totalFiles').textContent = selectedFiles.length;
+        
+        // Update frequency info
+        updateFreqResolution();
+    })();
+}
+
+function updateCalibration() {
+    const factor = parseFloat(document.getElementById('calibrationFactor').value);
+    if (!isNaN(factor) && analyzer) {
+        analyzer.setCalibrationFactor(factor);
+    }
+}
+
+function updateFreqResolution() {
+    if (!analyzer) return;
+    
+    const freqRes = parseFloat(document.getElementById('freqResolution').value);
+    if (isNaN(freqRes) || freqRes <= 0) return;
+    
+    analyzer.setFrequencyResolution(freqRes);
+    
+    const nfft = analyzer.currentNFFT;
+    const timeWindow = nfft / analyzer.fs;
+    const exactDf = analyzer.currentDF;
+    
+    document.getElementById('windowSizeDisplay').textContent = nfft.toLocaleString();
+    document.getElementById('windowTimeDisplay').textContent = timeWindow.toFixed(2);
+    document.getElementById('actualDfDisplay').textContent = exactDf.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+}
+
+function showError(message) {
+    const alert = document.getElementById('errorAlert');
+    document.getElementById('errorMessage').textContent = message;
+    alert.classList.add('show');
+}
+
+function clearError() {
+    document.getElementById('errorAlert').classList.remove('show');
+}
+
+async function startProcessing() {
+    if (!analyzer || selectedFiles.length === 0) {
+        showError('No files selected');
+        return;
+    }
+    
+    // Show progress
+    document.getElementById('progressContainer').style.display = 'block';
+    document.getElementById('processBtn').style.display = 'none';
+    document.getElementById('configPanel').style.display = 'none';
+    
+    try {
+        await analyzer.processFiles(selectedFiles, updateProgress);
+        
+        // Show results
+        document.getElementById('progressContainer').style.display = 'none';
+        showSummary();
+    } catch (error) {
+        showError('Processing error: ' + error.message);
+        document.getElementById('progressContainer').style.display = 'none';
+        document.getElementById('processBtn').style.display = 'inline-block';
+    }
+}
+
+function updateProgress(progress) {
+    const percent = Math.round(progress * 100);
+    document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressPercent').textContent = percent + '%';
+    document.getElementById('currentFile').textContent = Math.floor(progress * selectedFiles.length);
+    document.getElementById('totalFiles').textContent = selectedFiles.length;
+}
+
+function showSummary() {
+    const summary = analyzer.getSummary();
+    
+    document.getElementById('filesProcessedSummary').textContent = summary.filesProcessed;
+    document.getElementById('calibrationSummary').textContent = summary.calibrationFactor;
+    document.getElementById('sampleRateSummary').textContent = (summary.sampleRate / 1000).toFixed(1) + ' kHz';
+    document.getElementById('csvCountSummary').textContent = '1';
+    
+    document.getElementById('summaryBox').classList.add('show');
+    document.getElementById('downloadBtn').style.display = 'inline-block';
+    document.getElementById('resetBtn').style.display = 'inline-block';
+}
+
+function downloadResults() {
+    if (!analyzer) return;
+
+    const btn = document.getElementById('downloadBtn');
+    const icon = document.getElementById('downloadIcon');
+    const spinner = document.getElementById('downloadSpinner');
+    const label = document.getElementById('downloadLabel');
+
+    // Show spinner, disable button
+    btn.disabled = true;
+    icon.style.display = 'none';
+    spinner.style.display = 'inline-block';
+    label.textContent = ' Preparing download…';
+
+    // Yield to browser so the spinner renders, then do the work
+    setTimeout(() => {
+        try {
+            analyzer.downloadResults();
+        } finally {
+            // Restore button after a short delay (files are queued for download)
+            setTimeout(() => {
+                btn.disabled = false;
+                icon.style.display = 'inline-block';
+                spinner.style.display = 'none';
+                label.textContent = ' Download Results';
+            }, 800);
+        }
+    }, 50);
+}
+
+function resetAnalysis() {
+    analyzer = null;
+    selectedFiles = [];
+    
+    document.getElementById('configPanel').style.display = 'none';
+    document.getElementById('progressContainer').style.display = 'none';
+    document.getElementById('summaryBox').classList.remove('show');
+    document.getElementById('errorAlert').classList.remove('show');
+    document.getElementById('processBtn').style.display = 'none';
+    document.getElementById('downloadBtn').style.display = 'none';
+    document.getElementById('resetBtn').style.display = 'none';
+    document.getElementById('freqInfo').classList.remove('show');
+    
+    document.getElementById('folderInput').value = '';
+}
+</script>
+
+</body>
+</html>
