@@ -74,7 +74,8 @@ class FFTBatchAnalyzer {
         // Update sample rate if different
         if (audioBuffer.sampleRate !== this.fs) {
             this.fs = audioBuffer.sampleRate;
-            this.nfft = this.df.map(d => Math.round(this.fs / d));
+            // Recompute the achieved bin width for the existing nfft
+            this.currentDF = this.fs / this.currentNFFT;
         }
         
         return signal;
@@ -111,49 +112,77 @@ class FFTBatchAnalyzer {
     }
     
     /**
-     * Welch's method PSD — works with any window length (no power-of-2 required).
-     * Window length = nfft, 50% overlap, Hann window.
+     * MATLAB-equivalent single-sided amplitude spectrum, averaged across blocks.
+     *
+     * Matches fftSPL.m exactly:
+     *   acf  = nfft / sum(win)              % amplitude correction factor
+     *   Axx  = acf * 2 * |X(k)| / nfft      % single-sided peak amplitude per bin
+     *   Pmsq = Axx.^2 / 2                   % mean-square (rms^2) per bin
+     *   block-averaged in linear power, returned as Pmsq (units: input^2)
+     *
+     * Caller converts to dB SPL via 10*log10(Pmsq / pRef^2).
+     *
+     * Window length = nfft, fixed 50% overlap, Hann window. Pre-pads the
+     * signal to an integer multiple of nfft (matches MATLAB's zero-pad
+     * before buffer(...,'nodelay')).
      */
     pwelch(signal, nfft, fs) {
-        const hopSize = Math.round(nfft / 2);   // 50% overlap
+        const hopSize = Math.round(nfft / 2);   // 50% overlap, matches MATLAB round(nfft*0.5)
         const win     = this.hannWindow(nfft);
         const sumWin  = win.reduce((a, b) => a + b, 0);
+        const acf     = nfft / sumWin;          // amplitude correction (Hann ≈ 2.0)
+
+        // Zero-pad to an integer multiple of nfft (MATLAB:
+        //   p = [p; zeros(mod(-length(p), nfft), 1)] )
+        const padLen = ((-signal.length) % nfft + nfft) % nfft;
+        let padded;
+        if (padLen === 0) {
+            padded = signal;
+        } else {
+            padded = new Float64Array(signal.length + padLen);
+            padded.set(signal);
+        }
 
         const nBins = Math.floor(nfft / 2) + 1;
-        const Pxx   = new Float64Array(nBins);
+        const Pmsq  = new Float64Array(nBins);  // accumulated mean-square per bin
         let numBlocks = 0;
 
-        for (let start = 0; start + nfft <= signal.length; start += hopSize) {
-            // Extract windowed block
+        for (let start = 0; start + nfft <= padded.length; start += hopSize) {
+            // Apply Hann window to the block
             const block = new Float64Array(nfft);
             for (let i = 0; i < nfft; i++) {
-                block[i] = signal[start + i] * win[i];
+                block[i] = padded[start + i] * win[i];
             }
 
             // DFT via Bluestein — handles any length
             const spec = this.computeDFT(block);
 
-            // Accumulate one-sided power, corrected for window and fs
+            // MATLAB normalisation, single-sided, per bin:
+            //   Axx = acf * 2 * |X| / nfft   (peak amplitude)
+            //   contribution = Axx^2 / 2     (mean-square)
+            // Combined: contribution = (acf^2 * 2 * |X|^2) / nfft^2
+            const scale = (acf * acf * 2) / (nfft * nfft);
             for (let k = 0; k < nBins; k++) {
-                // spec[k] is complex magnitude; normalise by window sum and fs
                 const re = spec.re[k];
                 const im = spec.im[k];
-                const power = (re * re + im * im) / (sumWin * sumWin * fs);
-                Pxx[k] += power;
+                Pmsq[k] += (re * re + im * im) * scale;
             }
             numBlocks++;
         }
 
         if (numBlocks === 0) throw new Error('Signal too short for the requested window size.');
 
-        // Average and build frequency vector
+        // Average across blocks (linear power → matches MATLAB's
+        // 10*log10(mean(10.^(spec/10),2)) which is mathematically the same)
         const f = new Float64Array(nBins);
         for (let i = 0; i < nBins; i++) {
-            Pxx[i] /= numBlocks;
-            f[i]    = i * fs / nfft;
+            Pmsq[i] /= numBlocks;
+            f[i]     = i * fs / nfft;
         }
 
-        return { Pxx, f };
+        // Return under the same key name used by callers; values are now
+        // mean-square per bin (input units squared), not PSD.
+        return { Pxx: Pmsq, f };
     }
 
     /**
@@ -277,20 +306,25 @@ class FFTBatchAnalyzer {
             
             // Use the single user-chosen resolution
             const nfft = this.currentNFFT;
+            // Pxx now holds mean-square (rms^2) per bin — MATLAB convention
             const { Pxx, f } = this.pwelch(calibrated, nfft, this.fs);
-            
+
             // Calculate output spectrum
             let results;
             if (this.type === 'vibration') {
+                // RMS amplitude per bin in engineering units
                 results = new Float32Array(Pxx.length);
                 for (let i = 0; i < Pxx.length; i++) {
                     results[i] = Math.sqrt(Pxx[i]);
                 }
             } else {
-                const pRef = 20e-6;
+                // dB SPL re 20 µPa, computed directly from mean-square:
+                //   spec = 10*log10(Pmsq / pRef^2)
+                // Equivalent to MATLAB's 20*log10(sqrt(Ppow)/20e-6).
+                const pRef2 = 20e-6 * 20e-6;
                 results = new Float32Array(Pxx.length);
                 for (let i = 0; i < Pxx.length; i++) {
-                    results[i] = 20 * Math.log10(Math.sqrt(Pxx[i]) / pRef + 1e-10);
+                    results[i] = 10 * Math.log10(Pxx[i] / pRef2 + 1e-30);
                 }
             }
             
